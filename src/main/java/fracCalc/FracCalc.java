@@ -4,6 +4,8 @@
 
 package fracCalc;
 
+import static org.junit.Assert.assertArrayEquals;
+
 import java.util.*; 
 public class FracCalc {
 
@@ -44,19 +46,11 @@ public class FracCalc {
     	String Number1 = ""; 
     	String Number2 = ""; 
     	//Locate Number1
-    	if (operation >= 2) {
-    		Number1 += Input.substring(0, operation);
-    	}else if (operation <2) {
-    		Number1 += Input.charAt(0); 
-    	}  
+    	Number1 += Input.substring(0, operation);
     	//Locate Number2
-    	if ((Input.length()-1) - operation >= 3) {
-    		Number2 += Input.substring(operation + 3, Input.length());
-    	}else if (Input.length()-1 - operation < 3) {
-    		Number2 += Input.charAt(Input.length()-1);
-    	}
+    	Number2 += Input.substring(operation + 3, Input.length()); 
     	//Print numbers for checking
-    	System.out.println("Number1: " + Number1 + operationChar + " Number2: " + Number2+ " ");     	
+    	System.out.println("Number1: " + Number1 + " " + operationChar + " Number2: " + Number2);     	
     	//Declare numerator, denominator, whole. assign default values to them
     	int numerator1 = 0;
     	int denominator1 = 1; 
@@ -65,7 +59,6 @@ public class FracCalc {
     	int underscore1 = Number1.indexOf("_"); 
     	//Find the vinculum, or the fraction bar, by searching using IndexOf on Number2
         int vinculum1 = Number1.indexOf("/");
-        
         if (vinculum1 != -1) { 
         	if (underscore1 != -1) {
 	        	//Declare a String that is Number1 up until the underscore - in other words, the whole #
@@ -100,7 +93,6 @@ public class FracCalc {
         int underscore = Number2.indexOf("_"); 
     	//Find the vinculum, or the fraction bar, by searching using IndexOf on Number2
         int vinculum = Number2.indexOf("/");
-        
         if (vinculum != -1) { 
         	if (underscore != -1) {
 	        	//Declare a String that is Number2 up until the underscore - in other words, the whole #
@@ -128,8 +120,36 @@ public class FracCalc {
         }else {
         	whole = Integer.parseInt(Number2); 
         }
-       String Answer = calculate(whole1, numerator1, denominator1, whole, numerator, denominator, operationChar); 
-       return Answer;  
+      //case for if user tries to divide by zero
+       if (denominator1==0||denominator==0) {
+    	   return "ERROR: you can't divide by 0.";
+       }
+      //Case for multiplying zero by a number
+       if ((Number1.equals("0")||Number2.equals("0"))&&(operationChar == '*')) {
+    	   return "0"; 
+       }
+       //Case for dividing zero by something
+       if ((Number1.equals("0"))&&(operationChar == '/')) {
+    	   return "0"; 
+       }
+       //Case for dividing something by itself
+       if ((operationChar == '/')&&(Number1.equals(Number2))) {
+    	   return "1"; 
+       }
+      //Case for adding zero to a number
+       if (operationChar == '+') {
+    	   if (Number1.equals("0")&&!Number2.equals("0")) {
+    		   String Answer = improperFractions(whole, numerator, denominator); 
+    		   return Answer;  
+    	   }
+    	   else if (Number2.equals("0")&&!Number1.equals("0")) {
+    		   String Answer = improperFractions(whole1, numerator1, denominator1); 
+    		   return Answer;
+    	   }
+       } 
+    	   String Answer = calculate(whole1, numerator1, denominator1, whole, numerator, denominator, operationChar); 
+    	   System.out.println("Answer " + Answer); 
+    	   return Answer; 
     }
     public static String calculate(int w1, int n1, int d1, int w2, int n2, int d2, char op) {
     	//Set default values for wholeResult, numResult, and denResult. 
@@ -141,7 +161,7 @@ public class FracCalc {
     		//Add the two numbers!
     		wholeResult = w1 + w2; 
     		denResult = d1 * d2; 
-    		numResult = (n1*d2) + (n2*d1); 
+    		numResult = (n1*d2) + (n2*d1);
     	}if (op == '-') {
     		//First, assign numerators for mixed numbers as converted to improper fractions
     		int improperNum1 = (w1*d1) + n1; 
@@ -155,11 +175,13 @@ public class FracCalc {
         		return "0";    
         	}
     		//Declare numerators for mixed numbers as converted to improper fractions
+    		else {
     		int improperNum1 = (w1*d1) + n1; 
     		int improperNum2 = (w2*d2) + n2; 
     		//Multiply the numerators and denominators
     		numResult = (improperNum1 * improperNum2); 
     		denResult = d1*d2; 
+    		}
     	}if (op == '/') {
     		//Declare numerators for mixed numbers as converted to improper fractions
     		int improperNum1 = (w1*d1) + n1; 
@@ -176,50 +198,77 @@ public class FracCalc {
     }
     //The improperFractions() method turns improper fraction (after the evaluation) into mixed number. 
     public static String improperFractions(int whole, int num, int den) {  
-    	if (Math.abs(num) > Math.abs(den)) {
+    	int totalWhole = ((num - (num % den))/den) + whole; 
+    	if (Math.abs(num) >= Math.abs(den)) {
 			//Scenario where the result has an improper fraction. 
-    		//Add new whole numbers to TotalWhole. 
-    		int totalWhole = ((num - (num % den))/den) + whole; 
+    		//Add new whole numbers to TotalWhole.  
 			num = Math.abs(num % den); 
-			den = Math.abs(den); 
+			den = Math.abs(den);
+    	} 
+		if (num==0) {
+				System.out.println("totalWhole "+ totalWhole);
+	    		return "" + totalWhole;  
+		}
 			//capture the result of reduceFractions in the String Reduced.
+		else {
 			String Reduced = reduceFractions(totalWhole, num, den);
-			return Reduced; 
-		}else {
-			//Scenario where there are no improper fractions, then the whole number stays as is
-			int totalWhole = whole; 
-			String Reduced = reduceFractions(totalWhole, num, den);
-			if (whole == 0 ) {
-				return Reduced; 
-			}
-			if (Reduced.equals("-1")||Reduced.equals("1)")) {
-				int reduced = totalWhole + Integer.parseInt(Reduced); 
-				return "" + reduced; 
-			}
+			if (Reduced.equals("-1")||Reduced.equals("1")) {
+					int reduced = totalWhole + Integer.parseInt(Reduced); 
+					return "" + reduced; 
+				}
 			else return Reduced;
-		} 
-    }
+			}
+    	/*}else {
+			//Scenario where there are no improper fractions, then the whole number stays as is
+			totalWhole = whole; 
+			String Reduced = reduceFractions(totalWhole, num, den);
+			/*if (totalWhole == 0) {
+				return Reduced; 
+			}*/
+		
+    } 
     //The reduceFractions() method reduces fractions. 
     public static String reduceFractions(int w, int n, int d) {
-    	//Return 1 if the numer
+    	//Return 1 if the numerator = denominator
     	if (n == d) {
     		return "1"; 
     	}
+    	//Return -1 if the numerator and denominator are the same number but different signs
     	if (n == -1*d) {
     		return "-1"; 
     	}
     	int cap = Math.abs(n); 
     	for (int i = cap; i > 1; i--) {
-    		if ((n % i == 0)&&(d % i == 0)) {
-    			n /= i; 
-    			d /= i;	 
+    		if (((n % i) == 0)&&((d % i) == 0)) {
+    			n = n/i; 
+    			d = d/i;	 
     		}
+    	}
     	if (w/n > 0) {
     		n = Math.abs(n); 
     	}
-    	}return w + "_" + n + "/" + d;
+    	if (w == 0) {
+    		if (d==1) {
+    			return "" + n;
+    		}
+    		else if (d<0&&n>0) {
+    	    	return "-" + n + "/" + Math.abs(d); 
+    		}else return "" + n + "/" + d; 
+    	}
+    	if (d==1) {
+    		return w + n + ""; 
+    	}
+    	if (d==1&&n==0) {
+    		return ""+ w; 
+    	}
+    	if (d==-1) {
+    		return w + "_" + (-1*n) + ""; 
+    	}
+    	else return w + "_" + n + "/" + d;
     }
-}
+  }
+
+
 
     // TODO: Fill in the space below with any helper methods that you think you will need
 
